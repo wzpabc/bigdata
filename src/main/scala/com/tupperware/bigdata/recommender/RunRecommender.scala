@@ -14,7 +14,8 @@ object RunRecommender extends IDEAConfig {
 
   def main(args: Array[String]): Unit = {
     loadProperties()
-    val spark = SparkSession.builder().appName(this.getClass.getSimpleName.toString)
+    val spark = SparkSession.builder()
+      .appName(this.getClass.getSimpleName.toString)
       .config("spark.jars", prop.get("spark.jars").toString)
       .config("spark.sql.warehouse.dir", prop.get("spark.sql.warehouse.dir").toString)
       .getOrCreate()
@@ -181,6 +182,11 @@ class RunRecommender(private val spark: SparkSession) {
     val artistByID = buildArtistByID(rawArtistData)
     artistByID.join(spark.createDataset(recommendedArtistIDs).toDF("id"), "id").
       select("name").show()
+
+    val result =artistByID.withColumn("user",lit(userID)).join(spark.createDataset(recommendedArtistIDs).toDF("id"), "id").
+      select("user","name").show()
+
+
 
     model.userFactors.unpersist()
     model.itemFactors.unpersist()
